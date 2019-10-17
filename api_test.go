@@ -148,7 +148,7 @@ func testNew(t *testing.T, when spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(api).NotTo(BeNil())
 			Expect(api.Client).NotTo(BeNil())
-			Expect(reflect.TypeOf(api.Client.Transport.(*oauth2.Transport).Base).String()).To(Equal("*uaa.uaaTransport"))
+			Expect(reflect.TypeOf(api.Client.Transport.(*oauth2.Transport).Base).String()).To(Equal("*uaa.UaaTransport"))
 		})
 
 		when("the server returns tokens", func() {
@@ -191,6 +191,14 @@ func testNew(t *testing.T, when spec.G, it spec.S) {
 		})
 	})
 
+	when("WithTransport()", func() {
+		it("uses the provided transport for the client", func() {
+			transport := http.RoundTripper(fakeTransport{})
+			api, _ := uaa.New("https://example.net", uaa.WithNoAuthentication(), uaa.WithTransport(&transport))
+			Expect(api.Client.Transport.(*uaa.UaaTransport).Transport).To(Equal(&transport))
+		})
+	})
+
 	when("NewWithPasswordCredentials()", func() {
 		it("fails if the target url is invalid", func() {
 			api, err := uaa.New("(*#&^@%$&%)", uaa.WithPasswordCredentials("", "", "", "", uaa.OpaqueToken))
@@ -210,7 +218,7 @@ func testNew(t *testing.T, when spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(api).NotTo(BeNil())
 			Expect(api.Client).NotTo(BeNil())
-			Expect(reflect.TypeOf(api.Client.Transport.(*oauth2.Transport).Base).String()).To(Equal("*uaa.uaaTransport"))
+			Expect(reflect.TypeOf(api.Client.Transport.(*oauth2.Transport).Base).String()).To(Equal("*uaa.UaaTransport"))
 		})
 	})
 
@@ -277,7 +285,7 @@ func testNew(t *testing.T, when spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(api).NotTo(BeNil())
 				Expect(api.Client).NotTo(BeNil())
-				Expect(reflect.TypeOf(api.Client.Transport.(*oauth2.Transport).Base).String()).To(Equal("*uaa.uaaTransport"))
+				Expect(reflect.TypeOf(api.Client.Transport.(*oauth2.Transport).Base).String()).To(Equal("*uaa.UaaTransport"))
 			})
 		})
 
@@ -394,7 +402,7 @@ func testNew(t *testing.T, when spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(api).NotTo(BeNil())
 				Expect(api.Client).NotTo(BeNil())
-				Expect(reflect.TypeOf(api.Client.Transport.(*oauth2.Transport).Base).String()).To(Equal("*uaa.uaaTransport"))
+				Expect(reflect.TypeOf(api.Client.Transport.(*oauth2.Transport).Base).String()).To(Equal("*uaa.UaaTransport"))
 			})
 		})
 
@@ -446,4 +454,11 @@ func testNew(t *testing.T, when spec.G, it spec.S) {
 			})
 		})
 	})
+}
+
+type fakeTransport struct {
+}
+
+func (transport fakeTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+	return nil, nil
 }

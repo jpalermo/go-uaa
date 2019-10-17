@@ -21,7 +21,7 @@ func init() {
 	suite("tokenKey", testTokenKey)
 	suite("tokenKeys", testTokenKeys)
 	suite("buildSubdomainURL", testBuildSubdomainURL)
-	suite("uaaTransport", testUaaTransport)
+	suite("UaaTransport", testUaaTransport)
 	suite("users", testUsers)
 
 	// Generated

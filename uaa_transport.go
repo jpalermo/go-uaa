@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-type uaaTransport struct {
-	Transport      http.RoundTripper
+type UaaTransport struct {
+	Transport      *http.RoundTripper
 	LoggingEnabled bool
 }
 
-func (t *uaaTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *UaaTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	t.logRequest(req)
 
 	authHeader := req.Header.Get("Authorization")
@@ -30,27 +30,27 @@ func (t *uaaTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, err
 }
 
-func NewUaaTransport(loggingEnabled bool) *uaaTransport {
-	return &uaaTransport{LoggingEnabled: loggingEnabled}
+func NewUaaTransport(loggingEnabled bool) *UaaTransport {
+	return &UaaTransport{LoggingEnabled: loggingEnabled}
 }
 
-func (t *uaaTransport) logRequest(req *http.Request) {
+func (t *UaaTransport) logRequest(req *http.Request) {
 	if t.LoggingEnabled {
 		bytes, _ := httputil.DumpRequest(req, false)
 		fmt.Printf(string(bytes))
 	}
 }
 
-func (t *uaaTransport) logResponse(resp *http.Response) {
+func (t *UaaTransport) logResponse(resp *http.Response) {
 	if t.LoggingEnabled {
 		bytes, _ := httputil.DumpResponse(resp, true)
 		fmt.Printf(string(bytes))
 	}
 }
 
-func (t *uaaTransport) transport() http.RoundTripper {
+func (t *UaaTransport) transport() http.RoundTripper {
 	if t.Transport != nil {
-		return t.Transport
+		return *t.Transport
 	}
 
 	return http.DefaultTransport

@@ -34,6 +34,7 @@ type API struct {
 	authorizationCode         string
 	refreshToken              string
 	tokenFormat               TokenFormat
+	transport                 *http.RoundTripper
 	clientCredentialsConfig   *cc.Config
 	passwordCredentialsConfig *pc.Config
 	oauthConfig               *oauth2.Config
@@ -88,7 +89,7 @@ func New(target string, authOpt AuthenticationOption, opts ...Option) (*API, err
 	for _, option := range opts {
 		option.Apply(a)
 	}
-	WithClient(defaultClient(a.verbose)).Apply(a)
+	WithClient(a.defaultClient(a.verbose)).Apply(a)
 	err := a.validate()
 	if err != nil {
 		return nil, err
@@ -97,13 +98,15 @@ func New(target string, authOpt AuthenticationOption, opts ...Option) (*API, err
 	return a, nil
 }
 
-func defaultClient(verbose bool) *http.Client {
-	return &http.Client{Transport: NewUaaTransport(verbose)}
+func (a *API) defaultClient(verbose bool) *http.Client {
+	uaaTransport := NewUaaTransport(verbose)
+	uaaTransport.Transport = a.transport
+	return &http.Client{Transport: uaaTransport}
 }
 
 func (a *API) Token(ctx context.Context) (*oauth2.Token, error) {
 	if _, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); !ok {
-		ctx = context.WithValue(ctx, oauth2.HTTPClient, defaultClient(a.verbose))
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, a.defaultClient(a.verbose))
 	}
 
 	switch a.mode {
@@ -163,7 +166,7 @@ func (a *API) validate() error {
 		if a.Client == nil && a.unauthenticatedClient != nil {
 			a.Client = a.unauthenticatedClient
 		} else if a.Client == nil {
-			a.Client = defaultClient(a.verbose)
+			a.Client = a.defaultClient(a.verbose)
 		}
 	}
 	if err != nil {
@@ -214,6 +217,18 @@ func WithSkipSSLValidation(skipSSLValidation bool) Option {
 
 func (w *withSkipSSLValidation) Apply(a *API) {
 	a.skipSSLValidation = w.skipSSLValidation
+}
+
+type withTransport struct {
+	transport *http.RoundTripper
+}
+
+func WithTransport(transport *http.RoundTripper) Option {
+	return &withTransport{transport: transport}
+}
+
+func (w *withTransport) Apply(a *API) {
+	a.transport = w.transport
 }
 
 type withUserAgent struct {
